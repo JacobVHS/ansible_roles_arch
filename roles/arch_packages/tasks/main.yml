@@ -1,0 +1,6 @@
+---
+
+- name: Install required packages
+  community.general.pacman:
+    name: "{{ required_pacman_packages }}"
+    state: present
