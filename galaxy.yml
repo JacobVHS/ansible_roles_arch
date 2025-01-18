@@ -40,15 +40,17 @@ tags: []
 # collection label 'namespace.name'. The value is a version range
 # L(specifiers,https://python-semanticversion.readthedocs.io/en/latest/#requirement-specification). Multiple version
 # range specifiers can be set and are separated by ','
-dependencies: {}
+dependencies:
+  community.general: ""
+  ansible.posix: ""
 
 # The URL of the originating SCM repository
 repository: https://github.com/JacobVHS/ansible-roles-arch
 
 # The URL to the homepage of the collection/project
-homepage: http://example.com
+homepage: https://github.com/JacobVHS/ansible-roles-arch
 
 # The URL to the collection issue tracker
-issues: http://example.com/issue/tracker
+issues: https://github.com/JacobVHS/ansible-roles-arch/issues
 build_ignore: []
 
