@@ -1,5 +1,21 @@
 ---
 
+- name: Install Hyprland
+  community.general.pacman:
+    name: "{{ hyprland_packages }}"
+    state: present
+    update_cache: true
+
+- name: Install GPU-specific packages
+  community.general.pacman:
+    name: "{{ gpu_packages[ansible_facts['vendor'] | default('intel')] }}"
+    state: present
+
+- name: Install additional system packages
+  community.general.pacman:
+    name: "{{ additional_packages }}"
+    state: present
+
 - name: Ensure SDDM and qt6 are installed
   community.general.pacman:
     name:
@@ -9,10 +25,23 @@
       - qt6-multimedia-ffmpeg
     state: present
 
-- name: Make sure sddm service is enabled
-  ansible.builtin.service:
+- name: Enable and start NetworkManager service
+  ansible.builtin.systemd:
+    name: NetworkManager
+    enabled: true
+    state: started
+
+- name: Enable and start SDDM service
+  ansible.builtin.systemd:
     name: sddm
-    state: enabled
+    enabled: true
+    state: started
+
+- name: Enable seatd service for hardware access
+  ansible.builtin.systemd:
+    name: seatd
+    enabled: true
+    state: started
 
 - name: Push out sddm.conf
   ansible.builtin.template:
