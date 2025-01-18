@@ -1,0 +1,19 @@
+---
+- name: Check for Arch Linux live environment
+  ansible.builtin.fail:
+    msg: Aborting - This host hasn't been booted from an Arch Linux installer medium!
+  when: ansible_nodename != 'archiso'
+
+- name: Check EFI firmware platform size
+  ansible.builtin.command: cat /sys/firmware/efi/fw_platform_size
+  register: fw_platform_size
+  changed_when: false
+
+- name: Fail if not booted in 64-bit mode
+  ansible.builtin.fail:
+    msg: "The system is not booted in 64-bit mode. Detected firmware size: {{ fw_platform_size.stdout }}"
+  when: fw_platform_size.stdout != "64"
+
+- name: Synchronize system clock via NTP
+  ansible.builtin.command: timedatectl set-ntp true
+  changed_when: true

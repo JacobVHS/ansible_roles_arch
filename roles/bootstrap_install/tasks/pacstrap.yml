@@ -1,0 +1,59 @@
+---
+- name: Set Australian repo mirrors
+  ansible.builtin.copy:
+    src: |
+      Server = https://mirror.aarnet.edu.au/pub/archlinux/$repo/os/$arch
+      Server = http://ftp.iinet.net.au/pub/archlinux/$repo/os/$arch
+      Server = http://mirror.internode.on.net/pub/archlinux/$repo/os/$arch
+      Server = http://ftp.swin.edu.au/archlinux/$repo/os/$arch
+      Server = http://syd.mirror.rackspace.com/archlinux/$repo/os/$arch
+      Server = https://syd.mirror.rackspace.com/archlinux/$repo/os/$arch
+      Server = http://archlinux.mirror.digitalpacific.com.au/$repo/os/$arch
+      Server = https://archlinux.mirror.digitalpacific.com.au/$repo/os/$arch
+      Server = http://au.mirrors.cicku.me/archlinux/$repo/os/$arch
+      Server = https://au.mirrors.cicku.me/archlinux/$repo/os/$arch
+      Server = http://gsl-syd.mm.fcix.net/archlinux/$repo/os/$arch
+      Server = https://gsl-syd.mm.fcix.net/archlinux/$repo/os/$arch
+      Server = https://sydney.mirror.pkgbuild.com/$repo/os/$arch
+      Server = https://au.arch.niranjan.co/$repo/os/$arch
+    dest: /etc/pacman.d/mirrorlist
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Run pacstrap install
+  ansible.builtin.command: pacstrap -K /mnt base linux linux-firmware amd-ucode lvm vim
+  changed_when: true
+
+- name: Copy to the installed environment as well
+  ansible.builtin.copy:
+    src: /etc/pacman.d/mirrorlist
+    dest: /mnt/etc/pacman.d/mirrorlist
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Create fstab
+  ansible.builtin.command:
+    cmd: genfstab -U /mnt >> /mnt/etc/fstab
+  changed_when: true
+
+- name: Run commands in chroot
+  ansible.builtin.command: "arch-chroot /mnt {{ item }}"
+  with_items:
+    - "ln -sf /usr/share/zoneinfo/Region/Melbourne /etc/localtime"
+    - "hwclock --systohc"
+    - "echo 'en_US.UTF-8 UTF-8' > /etc/locale.gen"
+    - "echo 'LANG=en_US.UTF-8' > /etc/locale.conf"
+    - "locale-gen"
+    - "echo 'nemesis' > /etc/hostname"
+    - "mkinitcpio -P"
+    - "echo 'root:{{ root_password }}' | chpasswd"
+  changed_when: true
+
+- name: Install systemd-boot
+  ansible.builtin.command: "arch-chroot /mnt {{ item }}"
+  with_items:
+    - "bootctl install"
+    - "systemctl enable systemd-boot-update.service"
+  changed_when: true

@@ -1,0 +1,160 @@
+---
+
+- name: List all disks with fdisk
+  ansible.builtin.command:
+    cmd: fdisk -l
+  register: fdisk_output
+  changed_when: false
+
+- name: Find empty NVMe disks
+  ansible.builtin.set_fact:
+    empty_nvme_disks: >-
+      {{
+        fdisk_output.stdout_lines
+        | select('match', '^Disk /dev/nvme[0-9]+n[0-9]+:')
+        | map('regex_search', 'Disk (/dev/nvme[0-9]+n[0-9]+):')
+        | map('extract', 0)
+        | list
+      }}
+
+- name: Fail if no empty NVMe disks are found
+  ansible.builtin.fail:
+    msg: "No empty NVMe disks found."
+  when: empty_nvme_disks | length == 0
+
+- name: Identify the largest empty NVMe disk
+  ansible.builtin.command:
+    cmd: lsblk -b -o NAME,SIZE | grep '^nvme' | sort -k2 -n | tail -n 1
+  register: largest_nvme_disk
+  changed_when: false
+
+- name: Partition the largest NVMe disk
+  ansible.builtin.command:
+    cmd: fdisk /dev/{{ largest_nvme_disk.stdout.split()[0] }}
+    stdin: |
+      o   # Create a new empty DOS partition table
+      n   # New partition
+      p   # Primary partition
+      1   # Partition number 1
+      +2G # 2 GB boot partition
+      n   # New partition
+      p   # Primary partition
+      2   # Partition number 2
+      +16G # 16 GB swap partition
+      n   # New partition
+      p   # Primary partition
+      3   # Partition number 3 (root partition)
+      #   # Use remaining space for root partition
+      t   # Change partition type
+      2   # Set swap partition type
+      w   # Write changes
+  become: true
+  changed_when: true
+
+- name: Inform that partitions were created
+  ansible.builtin.debug:
+    msg: "Partitions for boot, swap, and root have been created."
+
+- name: Format boot partition (xfs)
+  community.general.filesystem:
+    fstype: xfs
+    dev: /dev/{{ largest_nvme_disk.stdout.split()[0] }}1
+  become: true
+
+- name: Format swap partition
+  ansible.builtin.command:
+    cmd: mkswap /dev/{{ largest_nvme_disk.stdout.split()[0] }}2
+  become: true
+  changed_when: true
+
+- name: Enable swap
+  ansible.builtin.command:
+    cmd: swapon /dev/{{ largest_nvme_disk.stdout.split()[0] }}2
+  become: true
+  changed_when: true
+
+- name: Set up LVM on root partition
+  community.general.lvg:
+    vg: vg_root
+    pvs: /dev/{{ largest_nvme_disk.stdout.split()[0] }}3
+  become: true
+
+- name: Create logical volume for root (remaining space after boot and swap)
+  community.general.lvol:
+    vg: vg_root
+    lv: root
+    size: 100%FREE
+  become: true
+
+- name: Format the root logical volume (xfs)
+  community.general.filesystem:
+    fstype: xfs
+    dev: /dev/vg_root/root
+  become: true
+
+- name: Mount the root logical volume to /mnt
+  ansible.posix.mount:
+    path: /mnt
+    src: /dev/vg_root/root
+    fstype: xfs
+    state: mounted
+  become: true
+
+- name: Mount boot partition to /mnt/boot
+  ansible.posix.mount:
+    path: /mnt/boot
+    src: /dev/{{ largest_nvme_disk.stdout.split()[0] }}1
+    fstype: xfs
+    state: mounted
+  become: true
+
+- name: Mount necessary directories for LVM
+  ansible.posix.mount:
+    path: "/mnt/{{ item.name }}"
+    src: "/dev/vg_root/{{ item.name }}"
+    fstype: xfs
+    state: mounted
+  loop:
+    - { name: home }
+    - { name: usr }
+    - { name: var }
+    - { name: opt }
+  become: true
+
+- name: Create logical volumes for /home, /usr, /var, /opt with custom space allocation
+  community.general.lvol:
+    vg: vg_root
+    lv: "{{ item.name }}"
+    size: "{{ item.size }}"
+  loop:
+    - { name: home, size: "{{ (70 * (root_size | float)) / 100 }}G" }
+    - { name: usr, size: "{{ (10 * (root_size | float)) / 100 }}G" }
+    - { name: var, size: "{{ (10 * (root_size | float)) / 100 }}G" }
+    - { name: opt, size: "{{ (10 * (root_size | float)) / 100 }}G" }
+  become: true
+  vars:
+    root_size: "{{ (ansible.builtin.command('lsblk /dev/vg_root/root -b -o SIZE').stdout.split()[0] | int) / 1024 / 1024 / 1024 }}"
+
+- name: Format logical volumes for /home, /usr, /var, /opt
+  community.general.filesystem:
+    fstype: xfs
+    dev: /dev/vg_root/{{ item.name }}
+  loop:
+    - { name: home }
+    - { name: usr }
+    - { name: var }
+    - { name: opt }
+  become: true
+
+- name: Mount logical volumes for /home, /usr, /var, /opt
+  ansible.posix.mount:
+    path: "/mnt/{{ item.name }}"
+    src: "/dev/vg_root/{{ item.name }}"
+    fstype: xfs
+    state: mounted
+  loop:
+    - { name: home }
+    - { name: usr }
+    - { name: var }
+    - { name: opt }
+  become: true

@@ -1,0 +1,12 @@
+---
+- name: Configure disks
+  ansible.builtin.include_tasks:
+    file: disks.yml
+
+- name: Pacstrap Arch Linux
+  ansible.builtin.include_tasks:
+    file: pacstrap.yml
+
+- name: Success message
+  ansible.builtin.debug:
+    msg: "Arch Linux has been successfully bootstrapped! Reboot the OS and proceed to configure manage the system."
