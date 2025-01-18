@@ -31,8 +31,6 @@ ansible-galaxy role install JacobVHS.ansible_roles_arch
     - JacobVHS.ansible_roles_arch.arch_dotfiles
     - JacobVHS.ansible_roles_arch.arch_python
 ```
-```
-```
 ```shell
 ansible-playbook playbook.yaml
 ```
