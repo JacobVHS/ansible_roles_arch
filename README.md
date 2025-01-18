@@ -16,7 +16,8 @@ ansible-galaxy role install JacobVHS.ansible_roles_arch
   vars:
     username: "jacob"
   roles:
-    - JacobVHS.ansible_roles_arch.arch_baseinstall
+    - JacobVHS.ansible_roles_arch.bootstrap_checks
+    - JacobVHS.ansible_roles_arch.bootstrap_install
 ```
 ```yaml
 ---
