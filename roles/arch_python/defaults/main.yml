@@ -1,0 +1,7 @@
+---
+
+default_pip_installs:
+- requests
+- flask
+- numpy
+- ansible

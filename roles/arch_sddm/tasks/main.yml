@@ -1,0 +1,54 @@
+---
+
+- name: Ensure SDDM and qt6 are installed
+  community.general.pacman:
+    name:
+      - sddm
+      - qt6-svg
+      - qt6-virtualkeyboard
+      - qt6-multimedia-ffmpeg
+    state: present
+
+- name: Make sure sddm service is enabled
+  ansible.builtin.service:
+    name: sddm
+    state: enabled
+
+- name: Push out sddm.conf
+  ansible.builtin.template:
+    src: sddm.conf.j2
+    dest: /etc/sddm.conf
+
+- name: Clone sddm-astronaut-theme repository
+  ansible.builtin.git:
+    repo: "https://github.com/JacobVHS/sddm-astronaut-theme"
+    dest: "/usr/share/sddm/themes/sddm-astronaut-theme"
+    version: "master"
+    depth: 1
+  become: true
+
+- name: Copy fonts from theme to system fonts directory
+  ansible.builtin.copy:
+    remote_src: yes
+    src: "/usr/share/sddm/themes/sddm-astronaut-theme/Fonts/"
+    dest: "/usr/share/fonts/"
+    owner: root
+    group: root
+    mode: "0755"
+  become: true
+
+- name: Create SDDM virtual keyboard configuration
+  ansible.builtin.copy:
+    dest: "/etc/sddm.conf.d/virtualkbd.conf"
+    content: |
+      [General]
+      InputMethod=qtvirtualkeyboard
+    owner: root
+    group: root
+    mode: "0644"
+  become: true
+
+- name: Push out the metadata.desktop
+  ansible.builtin.template:
+    src: metadata.desktop.j2
+    dest: /usr/share/sddm/themes/sddm-astronaut-theme/metadata.desktop

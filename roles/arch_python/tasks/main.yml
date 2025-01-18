@@ -1,0 +1,33 @@
+---
+
+- name: Get list of users in /home
+  ansible.builtin.find:
+    paths: /home
+    file_type: directory
+    depth: 1
+  register: home_dirs
+
+- name: Create Python virtual environment for each user
+  block:
+    - name: Ensure python3-venv is installed
+      ansible.builtin.package:
+        name: python3-venv
+        state: present
+
+    - name: Create virtual environment for each user
+      ansible.builtin.command:
+        cmd: python3 -m venv /home/{{ item.path | basename }}/.venv
+        creates: /home/{{ item.path | basename }}/.venv
+      loop: "{{ home_dirs.files }}"
+      when: ansible_facts.uid_min <= ansible_facts.getent_passwd[item.path | basename].uid <= ansible_facts.uid_max
+
+    - name: Install default packages in virtual environment
+      ansible.builtin.command:
+        cmd: "/home/{{ item.path | basename }}/.venv/bin/pip install {{ default_packages | join(' ') }}"
+      loop: "{{ home_dirs.files }}"
+      vars:
+        default_packages: "{{ default_pip_installs }}"
+      when: ansible_facts.uid_min <= ansible_facts.getent_passwd[item.path | basename].uid <= ansible_facts.uid_max
+  become: yes
+  become_user: root
+

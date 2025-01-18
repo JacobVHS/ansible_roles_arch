@@ -1,0 +1,41 @@
+---
+
+- name: Ensure git is installed
+  ansible.builtin.package:
+    name: git
+    state: present
+
+- name: Get list of users in /home
+  ansible.builtin.find:
+    paths: /home
+    file_type: directory
+    depth: 1
+  register: home_users
+
+- name: Clone repository for each user
+  ansible.builtin.git:
+    repo: "https://github.com/JacobVHS/arch_dot_config"
+    dest: "/home/{{ item.path | basename }}/.config"
+    update: yes
+  loop: "{{ home_users.files }}"
+  become: yes
+  become_user: "{{ item.path | basename }}"
+  when: ansible_facts['os_family'] == 'Linux'
+
+- name: Set proper permissions for .config directory
+  ansible.builtin.file:
+    path: "/home/{{ item.path | basename }}/.config"
+    owner: "{{ item.path | basename }}"
+    group: "{{ item.path | basename }}"
+    recurse: yes
+    state: directory
+  loop: "{{ home_users.files }}"
+
+- name: Run the setup script for symlinks
+  command: "/home/{{ item.path | basename }}/.config/setup.sh"
+  changed_when: true
+  become: true
+  become_user: "{{ item.path | basename }}"
+  loop: "{{ home_users.files }}"
+
+

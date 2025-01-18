@@ -1,6 +1,53 @@
 ---
 
+- name: Push out pacman.conf
+  ansible.builtin.template:
+    src: pacman.conf.j2
+    dest: /etc/pacman.conf
+
+- name: Make sure we are using Australian Pacman repo mirrors
+  ansible.builtin.template:
+    src: mirrorlist.j2
+    dest: /etc/pacman.d/mirrorlist
+
+- name: Run a pacman upgrade to sync current packages to latest
+  community.general.pacman:
+    upgrade: true
+    update_cache: true
+
 - name: Install required packages
   community.general.pacman:
     name: "{{ required_pacman_packages }}"
     state: present
+
+- name: Check if paru is installed
+  command: paru --version
+  register: paru_installed
+  failed_when: false
+
+- name: Install Paru
+  when: paru_installed.rc != 0
+  block:
+    - name: Clone paru repository
+      ansible.builtin.git:
+        repo: "https://aur.archlinux.org/paru.git"
+        dest: "/tmp/paru"
+        update: no
+
+    - name: Build and install paru
+      ansible.builtin.command: makepkg -si --noconfirm
+      args:
+        chdir: "/tmp/paru"
+      when: ansible_facts['pkg_mgr'] == 'pacman'
+
+    - name: Clean up paru build directory
+      ansible.builtin.file:
+        path: "/tmp/paru"
+        state: absent
+
+- name: Update system packages using paru
+  ansible.builtin.command:
+    cmd: paru -Syu --noconfirm
+  environment:
+    LANG: "en_US.UTF-8"
+  changed_when: true
