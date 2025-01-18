@@ -15,6 +15,7 @@ ansible-galaxy role install JacobVHS.ansible_roles_arch
   become: true
   vars:
     username: "jacob"
+    root_password: "password"
   roles:
     - JacobVHS.ansible_roles_arch.bootstrap_checks
     - JacobVHS.ansible_roles_arch.bootstrap_install
@@ -34,6 +35,9 @@ ansible-galaxy role install JacobVHS.ansible_roles_arch
 ```shell
 ansible-playbook playbook.yaml
 ```
+
+## Galaxy Collection
+[Ansible Galaxy](https://galaxy.ansible.com/ui/repo/published/jacobvhs/ansible_roles_arch/)
 
 ## Author
 Jacob Schreuder
