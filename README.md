@@ -1,10 +1,10 @@
-# Ansible Collection - jacobvhs.ansible_roles_arch
+# Ansible Collection - jacobvhs.ansible_roles_arch.
 
 An Ansible collection to configure manage my Arch Linux machines.
 
 ## Installation
 ```shell
-ansible-galaxy role install JacobVHS.ansible_roles_arch
+ansible-galaxy role install jacobvhs.ansible_roles_arch.
 ```
 
 ## Usage Example
@@ -17,8 +17,8 @@ ansible-galaxy role install JacobVHS.ansible_roles_arch
     username: "jacob"
     root_password: "password"
   roles:
-    - JacobVHS.ansible_roles_arch.bootstrap_checks
-    - JacobVHS.ansible_roles_arch.bootstrap_install
+    - jacobvhs.ansible_roles_arch.bootstrap_checks
+    - jacobvhs.ansible_roles_arch.bootstrap_install
 ```
 ```yaml
 ---
@@ -26,11 +26,11 @@ ansible-galaxy role install JacobVHS.ansible_roles_arch
   hosts: localhost
   become: true
   roles:
-    - JacobVHS.ansible_roles_arch.arch_packages
-    - JacobVHS.ansible_roles_arch.arch_desktop
-    - JacobVHS.ansible_roles_arch.arch_network
-    - JacobVHS.ansible_roles_arch.arch_dotfiles
-    - JacobVHS.ansible_roles_arch.arch_python
+    - jacobvhs.ansible_roles_arch.arch_packages
+    - jacobvhs.ansible_roles_arch.arch_desktop
+    - jacobvhs.ansible_roles_arch.arch_network
+    - jacobvhs.ansible_roles_arch.arch_dotfiles
+    - jacobvhs.ansible_roles_arch.arch_python
 ```
 ```shell
 ansible-playbook playbook.yaml

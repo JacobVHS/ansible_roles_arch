@@ -10,7 +10,6 @@ required_pacman_packages:
 - zsh
 - zsh-syntax-highlighting
 - neovim
-- wayabr
 - waybar
 - hyprpaper
 - fastfetch

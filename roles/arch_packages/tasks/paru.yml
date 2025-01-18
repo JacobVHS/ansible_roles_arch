@@ -1,0 +1,38 @@
+---
+
+- name: Check if paru is installed
+  command: paru --version
+  register: paru_installed
+  failed_when: false
+  become_user: "{{ user }}"
+
+- name: Install Paru
+  when: paru_installed.rc != 0
+  block:
+    - name: Clone paru repository
+      ansible.builtin.git:
+        repo: "https://aur.archlinux.org/paru.git"
+        dest: "/tmp/paru"
+        update: no
+      become_user: "{{ user }}"
+
+    - name: Build and install paru
+      ansible.builtin.command: makepkg -si --noconfirm
+      args:
+        chdir: "/tmp/paru"
+      become_user: "{{ user }}"
+      when: ansible_facts['pkg_mgr'] == 'pacman'
+
+    - name: Clean up paru build directory
+      ansible.builtin.file:
+        path: "/tmp/paru"
+        state: absent
+      become_user: "{{ user }}"
+
+- name: Update system packages using paru
+  ansible.builtin.command:
+    cmd: paru -Syu --noconfirm
+  environment:
+    LANG: "en_US.UTF-8"
+  become_user: "{{ user }}"
+  changed_when: true

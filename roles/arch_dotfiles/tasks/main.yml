@@ -12,15 +12,22 @@
     depth: 1
   register: home_users
 
-- name: Clone repository for each user
+- name: Check if .config exists for each user
+  ansible.builtin.stat:
+    path: "/home/{{ item.path | basename }}/.config"
+  register: config_status
+  loop: "{{ home_users.files }}"
+  become: yes
+
+- name: Clone repository for each user only if not present
   ansible.builtin.git:
     repo: "https://github.com/JacobVHS/arch_dot_config"
     dest: "/home/{{ item.path | basename }}/.config"
-    update: yes
+    update: no
   loop: "{{ home_users.files }}"
   become: yes
   become_user: "{{ item.path | basename }}"
-  when: ansible_facts['os_family'] == 'Linux'
+  when: not (config_status.results[loop.index].stat.exists | default(false))
 
 - name: Set proper permissions for .config directory
   ansible.builtin.file:
@@ -31,11 +38,18 @@
     state: directory
   loop: "{{ home_users.files }}"
 
+- name: Ensure setup.sh is executable
+  ansible.builtin.file:
+    path: "/home/{{ item.path | basename }}/.config/setup.sh"
+    state: file
+    mode: '0755'
+  become: true
+  loop: "{{ home_users.files }}"
+
 - name: Run the setup script for symlinks
-  command: "/home/{{ item.path | basename }}/.config/setup.sh"
+  ansible.builtin.command: "/home/{{ item.path | basename }}/.config/setup.sh"
   changed_when: true
   become: true
   become_user: "{{ item.path | basename }}"
   loop: "{{ home_users.files }}"
-
-
+  ignore_errors: true

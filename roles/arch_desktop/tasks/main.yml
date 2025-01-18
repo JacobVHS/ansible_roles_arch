@@ -48,23 +48,44 @@
     src: sddm.conf.j2
     dest: /etc/sddm.conf
 
-- name: Clone sddm-astronaut-theme repository
-  ansible.builtin.git:
-    repo: "https://github.com/JacobVHS/sddm-astronaut-theme"
-    dest: "/usr/share/sddm/themes/sddm-astronaut-theme"
-    version: "master"
-    depth: 1
-  become: true
+- name: Check if /usr/share/sddm/themes/sddm-astronaut-theme exists
+  stat:
+    path: /usr/share/sddm/themes/sddm-astronaut-theme
+  register: dir_check
 
-- name: Copy fonts from theme to system fonts directory
-  ansible.builtin.copy:
-    remote_src: yes
-    src: "/usr/share/sddm/themes/sddm-astronaut-theme/Fonts/"
-    dest: "/usr/share/fonts/"
+- name: Perform action if directory exists
+  debug:
+    msg: "sddm-astronaut-theme already present."
+  when: dir_check.stat.isdir
+
+- name: Perform action if directory does not exist
+  when: not dir_check.stat.isdir
+  block:
+    - name: Clone sddm-astronaut-theme repository
+      ansible.builtin.git:
+        repo: "https://github.com/JacobVHS/sddm-astronaut-theme"
+        dest: "/usr/share/sddm/themes/sddm-astronaut-theme"
+        version: "master"
+        depth: 1
+      become: true
+
+    - name: Copy fonts from theme to system fonts directory
+      ansible.builtin.copy:
+        remote_src: yes
+        src: "/usr/share/sddm/themes/sddm-astronaut-theme/Fonts/"
+        dest: "/usr/share/fonts/"
+        owner: root
+        group: root
+        mode: "0755"
+      become: true
+
+- name: Ensure /etc/sddm.conf.d/ exists
+  ansible.builtin.file:
+    path: /etc/sddm.conf.d/
+    state: directory
     owner: root
     group: root
-    mode: "0755"
-  become: true
+    mode: '0755'
 
 - name: Create SDDM virtual keyboard configuration
   ansible.builtin.copy:
