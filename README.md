@@ -4,7 +4,7 @@ An Ansible collection to configure manage my Arch Linux machines.
 
 ## Installation
 ```shell
-ansible-galaxy role install JacobVHS.arch_conf
+ansible-galaxy role install JacobVHS.ansible_roles_arch
 ```
 
 ## Usage Example
