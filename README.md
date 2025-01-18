@@ -20,11 +20,9 @@ ansible-galaxy role install JacobVHS.arch_conf
 ```
 ```yaml
 ---
-- name: Base Install Arch from ISO
+- name: Arch Linux Configuration Management
   hosts: localhost
   become: true
-  vars:
-    username: "jacob"
   roles:
     - JacobVHS.ansible_roles_arch.arch_packages
     - JacobVHS.ansible_roles_arch.arch_desktop
