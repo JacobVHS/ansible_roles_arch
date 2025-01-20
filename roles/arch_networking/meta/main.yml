@@ -2,7 +2,7 @@
 dependencies: []
 
 galaxy_info:
-  role_name: arch_packages
+  role_name: arch_networking
   author: Jacob Schreuder
   description: Configuration Management for Arch Linux.
   company: "JacobVHS"
