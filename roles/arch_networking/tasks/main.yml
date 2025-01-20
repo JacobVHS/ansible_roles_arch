@@ -1,0 +1,21 @@
+---
+
+- name: Make sure Avahi is installed
+  community.general.pacman:
+    name: avahi
+    state: present
+  notify: Retart avahi
+
+- name: Make sure the service is enabled
+  ansible.builtin.service:
+    name: avahi-daemon
+    state: started 
+    enabled: true
+
+- name: Ensure mdns_minimal is enabled in /etc/nsswitch.conf
+  ansible.builtin.lineinfile:
+    path: /etc/nsswitch.conf
+    regexp: '^hosts:'
+    line: "hosts: mymachines mdns_minimal resolve [!UNAVAIL=return] files myhostname dns"
+  notify: Restart avahi
+
