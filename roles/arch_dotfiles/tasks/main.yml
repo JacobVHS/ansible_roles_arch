@@ -17,15 +17,15 @@
     path: "/home/{{ item.path | basename }}/.config"
   register: config_status
   loop: "{{ home_users.files }}"
-  become: yes
+  become: true
 
 - name: Clone repository for each user only if not present
   ansible.builtin.git:
     repo: "https://github.com/JacobVHS/arch_dot_config"
     dest: "/home/{{ item.path | basename }}/.config"
-    update: no
+    update: false
   loop: "{{ home_users.files }}"
-  become: yes
+  become: true
   become_user: "{{ item.path | basename }}"
   when: not (config_status.results[loop.index].stat.exists | default(false))
 
@@ -34,7 +34,7 @@
     path: "/home/{{ item.path | basename }}/.config"
     owner: "{{ item.path | basename }}"
     group: "{{ item.path | basename }}"
-    recurse: yes
+    recurse: true
     state: directory
   loop: "{{ home_users.files }}"
 

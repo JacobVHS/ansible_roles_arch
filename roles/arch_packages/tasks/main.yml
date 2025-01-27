@@ -4,11 +4,17 @@
   ansible.builtin.template:
     src: pacman.conf.j2
     dest: /etc/pacman.conf
+    owner: root
+    group: root
+    mode: "0644"
 
 - name: Make sure we are using Australian Pacman repo mirrors
   ansible.builtin.template:
     src: mirrorlist.j2
     dest: /etc/pacman.d/mirrorlist
+    owner: root
+    group: root
+    mode: "0644"
 
 - name: Run a pacman upgrade to sync current packages to latest
   community.general.pacman:
@@ -21,11 +27,12 @@
     state: present
 
 - name: Get list of users in /home
-  ansible.builtin.command: ls /home
+  ansible.builtin.command: "ls /home"
   register: home_users
+  changed_when: false
 
 - name: Manage PARU for each user
-  include_tasks: paru.yml
+  ansible.builtin.include_tasks: paru.yml
   loop: "{{ home_users.stdout_lines }}"
   loop_control:
     loop_var: user

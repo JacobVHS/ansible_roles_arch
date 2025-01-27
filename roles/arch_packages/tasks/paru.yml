@@ -13,7 +13,7 @@
       ansible.builtin.git:
         repo: "https://aur.archlinux.org/paru.git"
         dest: "/tmp/paru"
-        update: no
+        update: false
       become_user: "{{ user }}"
 
     - name: Build and install paru

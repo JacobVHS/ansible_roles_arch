@@ -1,39 +1,40 @@
 ---
 
 required_pacman_packages:
-- firefox
-- unzip
-- wofi
-- git
-- man
-- starship
-- zsh
-- zsh-syntax-highlighting
-- neovim
-- waybar
-- hyprpaper
-- fastfetch
-- fzf
-- vscodium
-- bat
-- tree
-- bluez
-- bluez-utils
-- tofi
-- paru
-- btop
-- podman
-- python-virtualenv
-- steam
-- ttf-liberation
-- lib32-mesa
-- go
-- ntp
-- nmap
-- kubectl
-- helm
-- rsync
-- vscodium
-- grim
-- slurp
-- cargo
+  - firefox
+  - unzip
+  - wofi
+  - git
+  - man
+  - starship
+  - zsh
+  - zsh-syntax-highlighting
+  - neovim
+  - waybar
+  - hyprpaper
+  - fastfetch
+  - fzf
+  - vscodium
+  - bat
+  - tree
+  - bluez
+  - bluez-utils
+  - tofi
+  - paru
+  - btop
+  - podman
+  - python-virtualenv
+  - steam
+  - ttf-liberation
+  - lib32-mesa
+  - go
+  - ntp
+  - nmap
+  - kubectl
+  - helm
+  - rsync
+  - vscodium
+  - grim
+  - slurp
+  - cargo
+  - tmux
